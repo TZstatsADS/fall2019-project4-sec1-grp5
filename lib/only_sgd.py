@@ -155,6 +155,9 @@ class ObjectiveFunction(object):
 				correct +=1
 		return (total-correct)/total
 
+	def get_q_matrix(self):
+		return self.q
+
 if __name__ == '__main__':
 
 
