@@ -27,12 +27,12 @@ Postprocessing Method
 SVD with KNN
 
 	
-**Contribution statement**: [default] 
-Jerry Zhang: Wrote entire SGD algorithm, KNN algorithm, and temporal dynamic algorithm
-Haofeng Chen: Derived relevant equations for objective functions + dynamics, helped write KNN algorithm
-Mingming Song: Wrote ALS algorithm with temporal dynamics
-Yuting Gong: Helped write ALS algorithm with temporal dynamics, preprocessed bias data
-Kaiyan Zheng: Helped summarize paper, created half the ppt slides
+**Contribution statement**:  
++ Jerry Zhang: Wrote entire SGD algorithm, KNN algorithm, and temporal dynamic algorithm
++ Haofeng Chen: Derived relevant equations for objective functions + dynamics, helped write KNN algorithm
++ Mingming Song: Wrote ALS algorithm with temporal dynamics
++ Yuting Gong: Helped write ALS algorithm with temporal dynamics, preprocessed bias data
++ Kaiyan Zheng: Helped summarize paper, created half the ppt slides
 
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 
