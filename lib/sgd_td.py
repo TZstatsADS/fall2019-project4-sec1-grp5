@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import ipdb
 
 class ObjectiveFunction(object):
-	def __init__(self, training, testing, features = 15, lmbda = 0.2):
+	def __init__(self, training, testing, movie_bias_time_name, features = 40, lmbda = .1):
 		self.train_data = training
 		self.test_data = testing
 		self.num_users = 610
@@ -14,29 +14,41 @@ class ObjectiveFunction(object):
 		self.lmbda = lmbda
 		self.p = None
 		self.q = None
-		self.learning_rate = 0.05
-		self.user_bias = np.zeros(self.num_users)
-		self.movie_bias = np.zeros(self.num_movies)
-		self.user_bi_reg = 0.01
-		self.movie_bi_reg = 0.01
-		self.store_movie_idx()
+		self.learning_rate = 0.1
+		self.movie_bias = pd.read_csv("bi_global.csv")[['val']].to_numpy()
+		self.user_bias = pd.read_csv("bu_global.csv")[['val']].to_numpy()
+		self.movie_bias_time = np.zeros((self.num_movies))# np.random.uniform(low=-0.1, high=0.1, size = self.num_movies)
+		self.user_bi_reg = self.lmbda
+		self.movie_bi_reg = self.lmbda
+		self.store_movie_idx(movie_bias_time_name)
 
 	def matrix_factorization(self):
 		np.random.seed(0)
-		self.p = np.random.uniform(low=-1, high=1, size=(self.num_users, self.features))
-		self.q = np.random.uniform(low=-1, high=1, size=(self.num_movies, self.features))
+		self.p = np.random.normal(scale=1./self.features,size=(self.num_users, self.features))#np.random.uniform(low=-0.5, high=0.5, size=(self.num_users, self.features))
+		self.q = np.random.normal(scale=1./self.features,size=(self.num_movies, self.features))#np.random.uniform(low=-0.5, high=0.5, size=(self.num_movies, self.features))
 		self.r = np.matmul(self.p, self.q.T)  #SHAPE: 610 X 9472
 
 
 	def temp_dyn_pred_reg(self, user_id, movie_id, train = True):
-		temp_dyn = 0#self.mu #+ self.movie_bias[movie_id] + self.user_bias[user_id]
+
+		temp_dyn = self.mu + self.movie_bias[movie_id] + self.user_bias[user_id] + self.movie_bias_time[movie_id]
 		return temp_dyn
 
-	def store_movie_idx(self):
+	def store_movie_idx(self, movie_bias_time_name):
 		df =  pd.read_csv("../data/ml-latest-small/movies.csv")
 		df['movie_index'] = [i for i in range(9742)]
 		self.movie_id2idx = dict(zip(df.movieId, df.movie_index))
 
+		df2 = pd.read_csv(movie_bias_time_name)
+		new = []
+		for i in range(len(df2['movieId'])):
+			update = self.movie_id2idx[df2['movieId'][i]]
+			new.append(update)
+		df2['movie_index'] = new
+		bibin = df2[['movie_index','bi']].to_numpy()
+
+		for i in range(len(bibin)):
+			self.movie_bias_time[int(bibin[i,0])] = bibin[i,1]
 
 	def train_obj_function(self, batch_size = 1, obj_function = 'GD'):
 
@@ -58,23 +70,25 @@ class ObjectiveFunction(object):
 				actual_rating = self.train_data[i*batch_size+j,:][2]				
 
 				prediction = np.matmul(self.q[movie_id,:], self.p[user_id,:].T) + self.temp_dyn_pred_reg(user_id, movie_id)
-				dpred_dq = self.p[user_id,:] ## double check this, but its based of assumption dq/dq = array of ones, so matrix multipls array of ones by p[row,:] = sum(p[row,:]) 
+				dpred_dq = self.p[user_id,:] 
 				dpred_dp = self.q[movie_id,:]
 
 				if obj_function == 'GD':
 
-					train_loss_values[i] = (actual_rating - prediction)**2 + self.GDreg(user_id, movie_id)
-					#train_loss += (actual_rating - prediction)**2 + self.GDreg(user_id, movie_id)
+					train_loss_values[i] = (actual_rating - prediction)**2 + self.GDreg(user_id, movie_id) + self.lmbda*(self.user_bias[user_id]**2 + self.movie_bias[movie_id]**2 + self.movie_bias_time[movie_id]**2)
 					dl_dq += 2*(actual_rating - prediction)*dpred_dq - self.deriv_GDreg(self.q, movie_id)
 					dl_dp += 2*(actual_rating - prediction)*dpred_dp - self.deriv_GDreg(self.p, user_id)
-				
-				#update p and q matrices via gradient descent, add value to train_loss array for plotting later
+					#ipdb.set_trace()
+				#update p and q matrices via gradient descent, add value to train_loss array for predictionlotting later
 				self.p[user_id,:] += self.learning_rate*dl_dp
 				self.q[movie_id,:] += self.learning_rate*dl_dq
 
-				#dl_dbu = (actual_rating - prediction) - self.user_bi_reg *self.user_bias[user_id]
-				dl_dbi = (actual_rating - prediction) - self.movie_bi_reg *self.movie_bias[movie_id]
-				#self.user_bias[user_id] += self.learning_rate*dl_dbu
+				dl_dbu = 2*(actual_rating - prediction) - 2*self.user_bi_reg *self.user_bias[user_id]
+				dl_dbi = 2*(actual_rating - prediction) - 2*self.movie_bi_reg *self.movie_bias[movie_id]
+				dl_dbut = 2*(actual_rating - prediction) - 2*self.lmbda *self.movie_bias_time[movie_id]
+
+				self.movie_bias_time[movie_id] += self.learning_rate*dl_dbut
+				self.user_bias[user_id] += self.learning_rate*dl_dbu
 				self.movie_bias[movie_id] += self.learning_rate*dl_dbi
 		
 		return train_loss_values
@@ -98,7 +112,7 @@ class ObjectiveFunction(object):
 		return np.average(test_loss_values)
 
 
-	def train_gd(self, objfunc, num_epochs= 20):
+	def train_gd(self, objfunc, num_epochs= 25):
 			
 		val_loss = np.zeros((num_epochs))
 		train_loss = np.zeros((num_epochs))
@@ -145,7 +159,12 @@ class ObjectiveFunction(object):
 		for i in range(total):
 			user_id = data[i,0] - 1
 			movie_id = self.movie_id2idx[data[i,1]]
-			if round(self.r[user_id, movie_id]*2)/2 == data[i,2]:
+			pred = round((self.r[user_id, movie_id] + self.mu +  self.movie_bias_time[movie_id] + self.user_bias[user_id][0] + self.movie_bias[movie_id][0])*2)/2
+			#print(pred, data[i,2])
+			#if not train:
+				#print(pred, data[i,2], correct, total)
+				#ipdb.set_trace()
+			if pred == data[i,2]:
 				correct +=1
 		#print(correct)
 		return (total-correct)/total
@@ -162,7 +181,6 @@ class ObjectiveFunction(object):
 
 if __name__ == '__main__':
 
-
 	data_path = 'train_test_data.xlsx'
 	xl_file = pd.ExcelFile(data_path)
 	df_names= [('bin1_train','bin1_test'),('bin2_train','bin2_test'),('bin3_train','bin3_test')]
@@ -170,15 +188,16 @@ if __name__ == '__main__':
 		for sheet_name in xl_file.sheet_names}
 
 	#Bin 1
+	bias_time = "bi_data1.csv"
 	train_data1 = dfs[df_names[0][0]][['userId','movieId','rating']].to_numpy().astype(int)
 	test_data1 = dfs[df_names[0][1]][['userId','movieId','rating']].to_numpy().astype(int)
-	objfunc1 = ObjectiveFunction(train_data1, test_data1)
+	objfunc1 = ObjectiveFunction(train_data1, test_data1, bias_time)
 	objfunc1.matrix_factorization()
 	objfunc1.train_gd('GD')
 	q = objfunc1.get_q_matrix()
 	p1 = objfunc1.get_p_matrix()
 
-	
+	'''
 	#Bin 2
 	train_data2 = dfs[df_names[1][0]][['userId','movieId','rating']].to_numpy().astype(int)
 	test_data2 = dfs[df_names[1][1]][['userId','movieId','rating']].to_numpy().astype(int)
@@ -199,3 +218,4 @@ if __name__ == '__main__':
 	q = objfunc3.get_q_matrix()
 	p3 = objfunc3.get_p_matrix()
 
+'''

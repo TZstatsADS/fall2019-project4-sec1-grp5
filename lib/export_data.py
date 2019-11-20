@@ -66,6 +66,7 @@ mu = all_train['rating'].mean()
 ### bu
 bu = pd.DataFrame(np.nanmean(R, axis=1) - mu)  #bias for users among all train
 bu['userId'] = R.index
+bu.to_csv('bu_global.csv')
 
 bu1 = bu[bu['userId'].isin(R1_train.index)]
 bu2 = bu[bu['userId'].isin(R2_train.index)]
@@ -74,6 +75,7 @@ bu3 = bu[bu['userId'].isin(R3_train.index)]
 ### bi
 bi = pd.DataFrame(np.nanmean(R, axis=0) - mu) #bias for movies among all train
 bi['movieId'] = R.columns
+#bi.to_csv('bi_global.csv')
 
 bi1 = bi[bi['movieId'].isin(R1_train.columns)]
 bi2 = bi[bi['movieId'].isin(R2_train.columns)]
@@ -95,7 +97,8 @@ bit3 = pd.DataFrame(np.nanmean(R3_train, axis = 0) - mu3)
 bi3 = pd.DataFrame(bi3.reset_index(drop= True)[0]+bit3[0])
 bi3['movieId'] = R3_train.columns
 
-
+ipdb.set_trace()
+'''
 df_list= [bin1_train,bin1_test,bin2_train,bin2_test,bin3_train,bin3_test]
 df_names= ['bin1_train','bin1_test','bin2_train','bin2_test','bin3_train','bin3_test']
 
@@ -103,5 +106,5 @@ writer = pd.ExcelWriter('train_test_data.xlsx')
 for i, df in enumerate(df_list):
     df.to_excel(writer,sheet_name=df_names[i])
 writer.save() 
-
+'''
 
