@@ -122,13 +122,14 @@ class ObjectiveFunction(object):
 		fig.suptitle("Nonprobabilistic Gradient Descent training")
 		loss.set_xlabel("# of Epochs") 
 		loss.set_ylabel("loss") 
-		loss.plot(x,train_loss) 
-		loss.plot(x,val_loss) 
+		loss.plot(x,train_loss,label='train loss') 
+		loss.plot(x,val_loss, label='test loss') 
+		loss.legend()
 		error.set_xlabel("# of Epochs") 
 		error.set_ylabel("error") 
-		error.plot(x,train_error) 
-		error.plot(x,val_error) 
-		
+		error.plot(x,train_error,label='train error') 
+		error.plot(x,val_error, label='test error') 
+		error.legend()
 		plt.show()
 
 	#def gradient_descent(self, matrix, dl, learning_rate = 0.001):
