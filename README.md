@@ -5,16 +5,34 @@
 Term: Fall 2019
 
 + Team #
-+ Projec title: Lorem ipsum dolor sit amet
++ Projec title: SGD + ALS with Temporal Dynamic Regularization and KNN Post Processing 
 + Team members
-	+ team member 1
-	+ team member 2
-	+ team member 3
-	+ team member 4
-	+ team member 5
-+ Project summary: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+	+ Chen, Haofeng hc2962@columbia.edu
+	+ Gong, Yuting yg2641@columbia.edu
+	+ Song, Mingming ms5710@columbia.edu
+	+ Zhang, Jerry jz2966@columbia.edu
+	+ Zheng, Kaiyan kz2324@columbia.edu
 	
-**Contribution statement**: [default] All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement. 
++ Project summary:
+Our goal was to evaluate A1 & A3, (SGD & ALS in Factorization Methods dealing with Temporal Dynamics) 
+
+Factorization Methods
+Gradient Descent (Nonprobabilistic)
+Alternating Least Squares
+
+Regularization Method
+Temporal Dynamics
+
+Postprocessing Method
+SVD with KNN
+
+	
+**Contribution statement**:  
++ Jerry Zhang: Wrote entire SGD algorithm, KNN algorithm, and temporal dynamic algorithm
++ Haofeng Chen: Derived relevant equations for objective functions + dynamics, helped write KNN algorithm
++ Mingming Song: Wrote ALS algorithm with temporal dynamics
++ Yuting Gong: Helped write ALS algorithm with temporal dynamics, preprocessed bias data
++ Kaiyan Zheng: Helped summarize paper, created half the ppt slides
 
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 
