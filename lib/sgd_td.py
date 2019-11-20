@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt 
 import ipdb
+from collections import defaultdict
 
 class ObjectiveFunction(object):
 	def __init__(self, training, testing, movie_bias_time_name, features = 40, lmbda = .1):
@@ -89,7 +90,7 @@ class ObjectiveFunction(object):
 
 				self.movie_bias_time[movie_id] += self.learning_rate*dl_dbut
 				self.user_bias[user_id] += self.learning_rate*dl_dbu
-				self.movie_bias[movie_id] += self.learning_rate*dl_dbi
+				self.movie_bias[movie_id] += 0.01*self.learning_rate*dl_dbi
 		
 		return train_loss_values
 
@@ -112,7 +113,7 @@ class ObjectiveFunction(object):
 		return np.average(test_loss_values)
 
 
-	def train_gd(self, objfunc, num_epochs= 25):
+	def train_gd(self, objfunc, num_epochs= 2):
 			
 		val_loss = np.zeros((num_epochs))
 		train_loss = np.zeros((num_epochs))
@@ -178,6 +179,50 @@ class ObjectiveFunction(object):
 	def get_p_matrix(self):
 		return self.p
 
+	def cosine_sim_mat(self):
+		from sklearn.metrics.pairwise import cosine_similarity
+		self.sim_mat = cosine_similarity(self.q)
+		self.watch_dict = self.make_watch_dict(self.train_data)
+		np.fill_diagonal(self.sim_mat, 0)
+
+	def make_prediction_matrix(self):
+		ipdb.set_trace()
+		
+		pred_mat = np.zeros((self.num_users, self.num_movies))
+		for i in range(len(pred_mat)):
+			for j in range(len(pred_mat[0])):
+				pred_mat[i,j] = self.argmaxcos(i,j)
+
+	def test_function(self):
+		self.cosine_sim_mat()
+		self.make_watch_dict(self.train_data)
+		self.make_prediction_matrix()
+
+	def argmaxcos(self, i,j):
+		user_idx = i + 1
+		pred_movie_idx = j
+		all_user_movies_watched = self.watch_dict[i + 1]
+		if len(all_user_movies_watched)== 0:
+			return 3.5
+
+		temp = np.zeros((len(all_user_movies_watched)))
+		for k in range(len(all_user_movies_watched)):
+			movie = all_user_movies_watched[k][0]
+			movie = self.movie_id2idx[movie] # ---> TRANSOFRM
+			temp[k] = self.sim_mat[pred_movie_idx,movie]
+		new_loc = np.argmax(temp)
+		rating = all_user_movies_watched[new_loc][1]
+		return rating
+
+	def make_watch_dict(self, data):
+		watch_dictionary = defaultdict(list)
+		for i in range(len(data)):
+			user_id = data[i,0]
+			movieId = data[i,1]
+			rating = data[i,2]
+			watch_dictionary[user_id].append((movieId, rating))
+		self.watch_dict = watch_dictionary
+
 
 if __name__ == '__main__':
 
@@ -196,12 +241,14 @@ if __name__ == '__main__':
 	objfunc1.train_gd('GD')
 	q = objfunc1.get_q_matrix()
 	p1 = objfunc1.get_p_matrix()
+	objfunc1.test_function()
 
 	'''
 	#Bin 2
+	bias_time2 = "bi_data2.csv"
 	train_data2 = dfs[df_names[1][0]][['userId','movieId','rating']].to_numpy().astype(int)
 	test_data2 = dfs[df_names[1][1]][['userId','movieId','rating']].to_numpy().astype(int)
-	objfunc2 = ObjectiveFunction(train_data2, test_data2)
+	objfunc2 = ObjectiveFunction(train_data2, test_data2, bias_time2 )
 	objfunc2.matrix_factorization()
 	objfunc2.update_q_matrix(q)
 	objfunc2.train_gd('GD')
@@ -209,13 +256,16 @@ if __name__ == '__main__':
 	p2 = objfunc2.get_p_matrix()
 
 	#Bin 3
+	bias_time3 = "bi_data3.csv"
 	train_data3 = dfs[df_names[2][0]][['userId','movieId','rating']].to_numpy().astype(int)
 	test_data3 = dfs[df_names[2][1]][['userId','movieId','rating']].to_numpy().astype(int)
-	objfunc3 = ObjectiveFunction(train_data3, test_data3)
+	objfunc3 = ObjectiveFunction(train_data3, test_data3, bias_time3)
 	objfunc3.matrix_factorization()
 	objfunc3.update_q_matrix(q)
 	objfunc3.train_gd('GD')
 	q = objfunc3.get_q_matrix()
 	p3 = objfunc3.get_p_matrix()
+
+
 
 '''
