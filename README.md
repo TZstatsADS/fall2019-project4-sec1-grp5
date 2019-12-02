@@ -28,7 +28,7 @@ SVD with KNN
 
 	
 **Contribution statement**:  
-+ Jerry Zhang: Wrote entire SGD algorithm, KNN algorithm, and temporal dynamic algorithm
++ Jerry Zhang: Wrote entire SGD algorithm, KNN algorithm, and temporal dynamic algorithm. Helped develop, research, and code relevant equations for all the algorithms.  Led the direction of the project as presenter and group leader. Helped write functions to plot and process data for all aspects of the project (both objective functions). Produced the most code and relevant work for final result and evaluation. 
 + Haofeng Chen: Derived relevant equations for objective functions + dynamics, helped write KNN algorithm
 + Mingming Song: Wrote ALS algorithm with temporal dynamics
 + Yuting Gong: Helped write ALS algorithm with temporal dynamics, preprocessed bias data
